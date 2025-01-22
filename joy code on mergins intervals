@@ -1,0 +1,17 @@
+function merge_int (array of intervals Arr) returns array of intervals
+    merge_int
+    if Arr = [] then
+        return merge_int []
+    else
+        sort (Arr)
+
+        for each interval in Arr
+        for i =1 to Arr.length
+        if merge_int=[] or interval i-1[1] > interval i [0] then
+        merge_int <--- interval i
+        else
+            interval i [0]<--- interval i-1[0]
+            interval i [1]<--- interval i [1]
+            merge_int<--- interval i
+
+            return merge_int

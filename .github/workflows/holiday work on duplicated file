@@ -1,0 +1,66 @@
+```
+#!/bin/bash
+
+# Function to display usage
+usage() {
+    echo "Usage: $0 <directory> [--fix]"
+    exit 1
+}
+
+# Check if the correct number of arguments is provided
+if [ "$#" -lt 1 ]; then
+    usage
+fi
+
+DIRECTORY=$1
+FIX_MODE=false
+
+# Check for the --fix flag
+if [ "$#" -eq 2 ] && [ "$2" == "--fix" ]; then
+    FIX_MODE=true
+fi
+
+# Check if the provided directory is valid
+if [ ! -d "$DIRECTORY" ]; then
+    echo "Error: '$DIRECTORY' is not a valid directory."
+    exit 1
+fi
+
+# Declare associative arrays to store file hashes and duplicates
+declare -A file_hashes
+declare -A duplicates
+
+# Find all files in the directory and calculate their hashes
+while IFS= read -r -d '' file; do
+    if [[ -r "$file" ]]; then
+        hash=$(md5sum "$file" | awk '{ print $1 }')
+        if [[ -n "${file_hashes[$hash]}" ]]; then
+            duplicates["$file"]="${file_hashes[$hash]}"
+        else
+            file_hashes["$hash"]="$file"
+        fi
+    else
+        echo "Warning: Cannot read file '$file'. Skipping."
+    fi
+done < <(find "$DIRECTORY" -type f -print0)
+
+# Output the results
+echo -e "File\t\t\t| Duplicate"
+echo "--------------------------------"
+for hash in "${!file_hashes[@]}"; do
+    original_file="${file_hashes[$hash]}"
+    if [[ -n "${duplicates[$original_file]}" ]]; then
+        echo -e "$original_file\t| Yes (${duplicates[$original_file]})"
+    else
+        echo -e "$original_file\t| No"
+    fi
+done
+
+# Handle the removal of duplicates if -fix is specified
+if [ "$FIX_MODE" = true ]; then
+    for dup in "${!duplicates[@]}"; do
+        echo "Deleting duplicate: $dup"
+        rm "$dup"
+    done
+fi
+```
