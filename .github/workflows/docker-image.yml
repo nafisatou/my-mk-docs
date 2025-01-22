@@ -1,0 +1,51 @@
+name: Build and Slim Docker Image
+
+on:
+  push:
+    branches:
+      - main    
+  schedule:
+  - cron: '30 13 * * *'
+  workflow_dispatch:
+  
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Log in to GitHub Container Registry
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.TOKEN }}
+
+    # Step 3: Build the Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/my-image:latest .
+
+    # Step 4: Slim the Docker image
+    - name: Download Docker Slim tool
+      run: |
+        curl -L -o ds.tar.gz https://github.com/slimtoolkit/slim/releases/download/1.40.11/dist_linux.tar.gz
+        tar -xvf ds.tar.gz
+        chmod +x dist_linux/docker-slim
+    - name: Optimize Docker image
+      run: |
+        ./dist_linux/docker-slim build --tag ghcr.io/${{ github.repository_owner }}/my-image:slim 
+
+    # Step 5: tag the slimed image
+    - name: tag slimed
+      run: |
+        docker tag ghcr.io/${{ github.repository_owner }}/my-image:latest ghcr.io/${{ github.repository_owner }}/my-image:slim
+
+    # Step 6: Push the slimmed image to GitHub Container Registry
+    - name: Push slim Docker image
+      run: |
+        docker push ghcr.io/${{ github.repository_owner }}/my-image:slim
