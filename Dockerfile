@@ -1,29 +1,24 @@
-#Use the official nginx image as base image
-FROM nginx:alpine AS builder
-
-#Install deps
-RUN apk update && \
-    apk add --no-cache python3 py3-pip
-
-# Create a virtual environment
-RUN python3 -m venv /app/venv
-
-# Activate the virtual environment
-ENV PATH="/app/venv/bin:$PATH"
-
-# Install mkdocs and mkdocs-material
-RUN pip3 install mkdocs mkdocs-material
+FROM nginx AS builder
 
 # Set working directory inside the container
 WORKDIR /app
 
-# Copy the project file into the container
+# Update system and install Python3, pip, and virtualenv
+RUN apt update && apt install -y python3 python3-pip python3-venv
+
+# Create a virtual environment for Python packages
+RUN python3 -m venv /venv
+
+# Install mkdocs and mkdocs-bootstrap in the virtual environment
+RUN /venv/bin/pip install mkdocs mkdocs-bootstrap
+
+# Copy the project files into the container
 COPY . .
 
 # Build the project
-RUN mkdocs build
+RUN /venv/bin/mkdocs build
 
 FROM nginx:alpine
 
-#Copy project build code to nginx server
+# Copy project build code to nginx server
 COPY --from=builder /app/site /usr/share/nginx/html
