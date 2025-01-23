@@ -1,3 +1,4 @@
+name: build my mkdoc project
 on:
   push:
     branches:
