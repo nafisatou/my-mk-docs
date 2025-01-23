@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     permissions:
-     package: write
+     packages: write
     
     steps:
     - name: Checkout code
