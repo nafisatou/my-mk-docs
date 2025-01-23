@@ -1,5 +1,5 @@
 name: build my mkdoc project
-on:
+on: 
   push:
     branches:
     - master
